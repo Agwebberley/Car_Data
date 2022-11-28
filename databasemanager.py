@@ -29,6 +29,7 @@ class DatabaseManager():
         conn.close()
     
     def create_drivers(self):
+        # Firefox options.
         op = webdriver.FirefoxOptions()
         op.add_argument('--headless')
         op.add_argument('--no-gpu')
@@ -38,29 +39,28 @@ class DatabaseManager():
         op.add_argument('--no-sandbox')
         op.add_argument('--disable-application-cache')
         op.add_argument("--disable-dev-shm-usage")
-        firefox_profile = webdriver.FirefoxProfile()
-        firefox_profile.set_preference('permissions.default.image', 2)
-        firefox_profile.set_preference('dom.ipc.plugins.enabled.libflashplayer.so', 'false')
+        op.set_preference('permissions.default.image', 2)
+        op.set_preference('dom.ipc.plugins.enabled.libflashplayer.so', 'false')
 
         # Get the path of the Firefox binary. C:\Program Files\Mozilla Firefox\firefox.exe
         op.binary_location = FirefoxBinary('C:\\Program Files\\Mozilla Firefox\\firefox.exe')
+
+        # Create the drivers.
         for i in range(self.drivers_number):
-            print(i)
-            driver = webdriver.Firefox(firefox_profile=firefox_profile, options=op)
+            driver = webdriver.Firefox(options=op)
             self.drivers.append(driver)
-        driver = webdriver.Firefox(options=op, firefox_profile=firefox_profile)
+        print('Drivers created.')
     
     def update_db(self):
-
-            # For each model and year from make_dict.json
+        # For each model and year from make_dict.json
         with open('make_dict.json') as f:
             make_dict = json.load(f)
         f.close()
-        # Save where we are if there is a TimeOut error.
-        # Open saved file.
+
         with open('saved.txt') as f:
             saved = f.read()
         f.close()
+
         saved = saved.split(',')
         # If there is no saved file, start from the beginning.
         if saved == ['']:
@@ -75,7 +75,7 @@ class DatabaseManager():
         for i in range(saved[0], len(makes)):
             make = makes[i]
             for j in range(saved[1], len(make_dict[make])):
-                # Get the models from the make_dict. Get the model not by index.
+                # Get the models from the make_dict.
                 model = list(make_dict[make].keys())[j]
                 for k in range(saved[2], len(make_dict[make][model])):
                     year = make_dict[make][model][k]
@@ -86,24 +86,29 @@ class DatabaseManager():
                             time.sleep(1)
                         threading.Thread(target=self.threaded_update_db, args=(make, model, year)).start()
                         time.sleep(0.5)
-                    # If there is a TimeOut error, save where we are and exit.
+                    # If there is an error (probably TimeOut Error), try again.
                     except:
-                        with open('saved.txt', 'w') as f:
-                            f.write(f'{i},{j},{k}')
-                        f.close()
+                        print("Error. Trying again.")                    
                         self.update_db()
+                    # Save the current make, model and year.
+                    finally:
+                        f = open('saved.txt', 'w')
+                        f.write(str(i) + ',' + str(j) + ',' + str(k))
+                        f.close()
+                saved[2] = 0
             saved[1] = 0
 
     def get_not_busy(self):
+        # Get the first driver that is not busy.
         for i in range(self.drivers_number):
             if not self.is_busy[i]:
                 return i
         return None                    
 
     def threaded_update_db(self, make, model, year):
+
         # Get the driver that is not busy.
-        # If there is no driver that is not busy, wait.
-        
+        # If there is no driver that is not busy, wait.   
         while self.get_not_busy() == None:
             time.sleep(0.2)
         dn = self.get_not_busy()
