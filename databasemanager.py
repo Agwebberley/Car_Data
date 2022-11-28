@@ -27,6 +27,7 @@ class DatabaseManager():
                         (id INTEGER PRIMARY KEY, make TEXT, model TEXT, year INTEGER, results INTEGER, avgprice INTEGER, avgmiles INTEGER, timestamp TEXT)''')
         conn.commit()
         conn.close()
+        print('Database created/checked.')
     
     def create_drivers(self):
         # Firefox options.
@@ -134,7 +135,7 @@ class DatabaseManager():
             avgprice = int(np.mean(prices))
         else:
             avgprice = 0
-        miles = ct.get_miles()
+        miles = ct.get_mileages()
         # Remove commas.
         miles = [int(mile.replace(',', '')) for mile in miles]
         if len(miles) > 0:

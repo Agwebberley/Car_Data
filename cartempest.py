@@ -25,7 +25,6 @@ class CarTempest:
         # and to fix problems with milage not being returned correctly sale by and min miles are set
         BASE_URL = "https://autotempest.com/results?zip=91321&radius=300&saletype=classified&saleby=dealer&minmiles=100"
         url = BASE_URL
-        print(self.params)
         for key, value in self.params.items():
             url += "&{}={}".format(key, value)
         return url
@@ -35,7 +34,6 @@ class CarTempest:
         titles = soup.find_all("a", class_="listing-link source-link")
         prices = soup.find_all("div", class_="badge__label label--price")
         mileages = soup.find_all("span", class_="info mileage")
-        print("titles: ", len(titles), "prices: ", len(prices), "mileages: ", len(mileages))
         for i in range(len(titles)):
             titles[i] = titles[i].get_text()
             prices[i] = prices[i].get_text()
