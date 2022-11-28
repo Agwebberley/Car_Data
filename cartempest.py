@@ -1,6 +1,4 @@
 from bs4 import BeautifulSoup
-from selenium import webdriver
-from selenium.webdriver.firefox.firefox_binary import FirefoxBinary
 
 
 class CarTempest:
@@ -11,42 +9,13 @@ class CarTempest:
         self.params = self.validate_params()
         self.vparams = self.valid_params()
         self.url = self.gen_url()
-        self.html = self.get_html_no_driver()
+        self.html = self.get_html()
         self.titles, self.prices, self.mileages = self.strip_html()
         self.years = self.get_years()
         self.data = self.create_data()
 
+
     def get_html(self):
-        
-        op = webdriver.FirefoxOptions()
-        op.add_argument('--headless')
-        op.add_argument('--no-gpu')
-        op.add_argument("start-maximized")
-        op.add_argument("disable-infobars")
-        op.add_argument("--disable-extensions")
-        op.add_argument('--no-sandbox')
-        op.add_argument('--disable-application-cache')
-        op.add_argument("--disable-dev-shm-usage")
-        firefox_profile = webdriver.FirefoxProfile()
-        firefox_profile.set_preference('permissions.default.image', 2)
-        firefox_profile.set_preference('dom.ipc.plugins.enabled.libflashplayer.so', 'false')
-
-        # Get the path of the Firefox binary. C:\Program Files\Mozilla Firefox\firefox.exe
-        op.binary_location = FirefoxBinary('C:\\Program Files\\Mozilla Firefox\\firefox.exe')
-        #op.binary_location = '/usr/bin/brave-browser'
-        #prefs = {"profile.managed_default_content_settings.images": 2}
-        #op.add_experimental_option("prefs", prefs)
-        # Use webdriver_manager to get the latest version of chromedriver
-        driver = webdriver.Firefox(options=op, firefox_profile=firefox_profile)
-
-        
-        driver.get(self.url)
-        html = driver.page_source
-        driver.close()
-        driver.quit()
-        return html
-    
-    def get_html_no_driver(self):
         self.driver.get(self.url)
         html = self.driver.page_source
         return html
@@ -94,9 +63,9 @@ class CarTempest:
     def get_url(self):
         return self.url
     
-    
     def get_params(self):
         return self.params
+
     def get_years(self):
         return [self.titles[i][37:41] for i in range(len(self.titles))]
     
@@ -146,12 +115,7 @@ def main():
     print("       Get available params with car.get_params()")
     print("       params = car.get_params()")
 
-def block_aggressively(route): 
-        excluded_resource_types = ["stylesheet", "image", "font"]
-        if (route.request.resource_type in excluded_resource_types):
-            route.abort()
-        else: 
-            route.continue_() 
+
 
 if __name__ == "__main__":
     main()

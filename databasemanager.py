@@ -24,7 +24,7 @@ class DatabaseManager():
         conn = sqlite3.connect('cars.db')
         c = conn.cursor()
         c.execute('''CREATE TABLE IF NOT EXISTS cars
-                        (id INTEGER PRIMARY KEY, make TEXT, model TEXT, year INTEGER, results INTEGER, avgprice INTEGER, timestamp TEXT)''')
+                        (id INTEGER PRIMARY KEY, make TEXT, model TEXT, year INTEGER, results INTEGER, avgprice INTEGER, avgmiles INTEGER, timestamp TEXT)''')
         conn.commit()
         conn.close()
     
@@ -111,10 +111,13 @@ class DatabaseManager():
         driver = self.drivers[dn]
         if driver == None:
             print("Something went wrong.")
-        # Get the average price.
+        
+
+        # Get the average price & miles.
         print(make, model, year)
         PARAMS = {'make': make.lower(), 'model': model.lower(), 'minyear': year, 'maxyear': year}
         ct = CarTempest(PARAMS, driver)
+
         prices = ct.get_prices()
         # Remove $ and commas.
         prices = [int(price[1:].replace(',', '')) for price in prices if price != 'Inquire']
@@ -126,6 +129,14 @@ class DatabaseManager():
             avgprice = int(np.mean(prices))
         else:
             avgprice = 0
+        miles = ct.get_miles()
+        # Remove commas.
+        miles = [int(mile.replace(',', '')) for mile in miles]
+        if len(miles) > 0:
+            avgmiles = int(np.mean(miles))
+        else:
+            avgmiles = 0
+
         # Give the driver back.
         self.is_busy[dn] = False
 
@@ -134,7 +145,7 @@ class DatabaseManager():
         conn = sqlite3.connect('cars.db')
         c = conn.cursor()
         now = datetime.now()
-        c.execute("INSERT INTO cars VALUES (NULL, ?, ?, ?, ?, ?, ?)", (make, model, year, results, avgprice, now))
+        c.execute("INSERT INTO cars VALUES (NULL, ?, ?, ?, ?, ?, ?)", (make, model, year, results, avgprice, avgmiles, now))
         conn.commit()
         conn.close()
 
