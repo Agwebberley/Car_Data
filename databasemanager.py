@@ -137,7 +137,7 @@ class DatabaseManager():
             avgprice = 0
         miles = ct.get_mileages()
         # Remove commas.
-        miles = [int(mile.replace(',', '')) for mile in miles]
+        miles = [int(mile[:-4].replace(',', '')) for mile in miles]
         if len(miles) > 0:
             avgmiles = int(np.mean(miles))
         else:
