@@ -7,8 +7,48 @@
 
 </head>
 <body>
+    <!-- Flask Page -->
+    <!-- Homepage with selectors that let you choose make model and year range -->
+    <h1>Car Data</h1>
+    
 
+    <form action="/car_data" method="POST">
+        <label for="make">Make</label>
+        {% for make in makes %}
+        <option value="{{ make }}">{{ make }}</option>
+        {% endfor %}
+        <br>
+        <label for="model">Model</label>
+        <option value="Select a Make First">Select a Make First</option>
+        <br>
+<script>
+    // When the make is selected, the model selector is populated with the models for that make
+    // The year range selector is populated with the years for that make and model
+    $(document).ready(function(){
+        $('#make').change(function(){
+            var make = $(this).val();
+            $.ajax({
+                url: '/_parse_make',
+                data: {'make': make},
+                type: 'GET',
+                success: function(response){
+                    var models = JSON.parse(response);
+                    var modelSelector = $('#model');
+                    modelSelector.empty();
+                    models.forEach(function(model){
+                        modelSelector.append('<option value="' + model + '">' + model + '</option>');
+                    });
+                },
+                error: function(error){
+                    console.log(error);
+                }
+            });
+        });
+    });
 
+    
+
+</script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.0.1/chart.min.js" integrity="sha512-tQYZBKe34uzoeOjY9jr3MX7R/mo7n25vnqbnrkskGr4D6YOoPYSpyafUAzQVjV6xAozAqUFIEFsCO4z8mnVBXA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 </body>
 </html>

@@ -10,78 +10,48 @@ from cartempest import CarTempest
 # Create the application.
 app = flask.Flask(__name__)
 
-# Create/Update the database.
-def create_db():
-    # Create the database.
-
+# Create a URL route in our application for "/"
+# You can choose a make, model, and year range to search for cars.
+@app.route("/")
+def index():
+    # Get a dictionary of all of the makes, thier corresponding models, and years.
+    # Get the data from the database. Filter out cars that all have 0 avgprice and 0 avgmiles.
     conn = sqlite3.connect('cars.db')
     c = conn.cursor()
-    c.execute('''CREATE TABLE IF NOT EXISTS cars
-                 (id INTEGER PRIMARY KEY, make TEXT, model TEXT, year INTEGER, city TEXT, avgprice INTEGER, results INTEGER, timestamp TEXT)''')
-    conn.commit()
+    c.execute("SELECT * FROM cars WHERE avgprice > 0 AND avgmiles > 0")
+    data = c.fetchall()
     conn.close()
-    # Call the function to update the database.
-    update_db()
+    # Create a dictionary of all of the makes, thier corresponding models, and years.
+    makes = []
+    for row in data:
+        make = row[1]
+        if make not in makes:
+            makes.append(make)
+    makes = sorted(makes)
+    return flask.render_template("index.html", makes=makes)
 
-# Update the database.
-def update_db():
-    # Connect to craigslist and get the data.
-    # For each city from cities.txt
-    with open('./CarData/cities.txt') as f:
-        cities = f.read() 
-    cities = cities[1:-2].split(',')
-    with open('./CarData/makes.txt') as f:
-        makes = f.read()
-    makes = makes[1:-2].split(',')
-    f.close()
-    for city in cities:
-        # For each model and year from make_dict.json
-        with open('./CarData/make_dict.json') as f:
-            make_dict = json.load(f)
-        f.close()
-        for make in make_dict:
-            for model in make_dict[make]:
-                # Get the data from craigslist.
-                cl = pycraigslist.forsale.cta(site=city[9:-16], filters={'query':f"{make} {model}", 'min_price':1000, 'min_miles': 1000})
-                # Get the average price.
-                prices = []
-                print(f"Getting data for {make} {model} in {city[9:-16]}...")
-
-                for result in cl.search():
-                    print(result)
-                    try:
-                        prices.append(int(result['price']))
-                    except:
-                        pass
-                if len(prices) > 0:
-                    avgprice = int(np.mean(prices))
-                else:
-                    avgprice = 0
-                # Get the timestamp.
-                # Insert the data into the database.
-                conn = sqlite3.connect('cars.db')
-                c = conn.cursor()
-                now = datetime.now()
-                c.execute('''INSERT INTO cars (make, model, city, avgprice, results, timestamp) VALUES (?, ?, ?, ?, ?, ?)''', (make, model, city, avgprice, len(prices), now.strftime('%Y%d%m%H%M%S')))
-                conn.commit()
-                conn.close()
-                time.sleep(0.5)
+# Create a URL route /_parse_make to parse the data.
+@app.route("/_parse_make" , methods=['GET'])
+def parse_data():
+    # Get the make and return the models.
+    make = flask.request.args.get('make', 0, type=str)
+    conn = sqlite3.connect('cars.db')
+    c = conn.cursor()
+    c.execute("SELECT * FROM cars WHERE make = ? AND avgprice > 0 AND avgmiles > 0", (make,))
+    data = c.fetchall()
+    conn.close()
+    models = []
+    for row in data:
+        model = row[2]
+        if model not in models:
+            models.append(model)
+    models = sorted(models)
+    return flask.jsonify(result=models)
 
 
 
-#update_db()
-
-
-# Crate cars.db if it doesn't exist.
-create_db()
-
-
-@app.route('/')
-def index():
-    return flask.render_template('index.html')
 
 
 
 #if __name__ == '__main__':
 #    app.run(debug=True)
-

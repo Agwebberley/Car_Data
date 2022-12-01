@@ -121,7 +121,7 @@ class DatabaseManager():
 
         # Get the average price & miles.
         print(make, model, year)
-        PARAMS = {'make': make.lower(), 'model': model.lower(), 'minyear': year, 'maxyear': year}
+        PARAMS = {'make': make.lower().replace(" ", ""), 'model': model.lower().replace(" ", ""), 'minyear': year, 'maxyear': year}
         ct = CarTempest(PARAMS, driver)
 
         prices = ct.get_prices()
@@ -151,7 +151,7 @@ class DatabaseManager():
         conn = sqlite3.connect('cars.db')
         c = conn.cursor()
         now = datetime.now()
-        c.execute("INSERT INTO cars VALUES (NULL, ?, ?, ?, ?, ?, ?)", (make, model, year, results, avgprice, avgmiles, now))
+        c.execute("INSERT INTO cars VALUES (NULL, ?, ?, ?, ?, ?, ?, ?)", (make, model, year, results, avgprice, avgmiles, now))
         conn.commit()
         conn.close()
 
